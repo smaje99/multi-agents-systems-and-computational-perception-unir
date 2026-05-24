@@ -42,14 +42,7 @@
   showstringspaces=false
 }
 
-\newcommand{\capturapendiente}[1]{
-\begin{center}
-\fbox{\parbox{0.88\textwidth}{\centering #1}}
-\end{center}
-\noindent\textit{#1}\par\medskip
-}
-
-\title{\textbf{Actividad JADE con memoria y ejercicio adicional}}
+\title{\textbf{Actividad JADE con ejercicio adicional de comunicación entre agentes}}
 \author{Sergio Andrés Majé Franco}
 \date{\Asignatura \\ \Universidad \\ \today}
 
@@ -60,17 +53,25 @@
 \newpage
 
 \section{Introducción}
-Esta práctica desarrolla una actividad con JADE centrada en un caso de uso sencillo pero completo: un agente con interfaz Swing que dialoga con otro agente para demostrar envío y recepción de mensajes dentro de una plataforma multiagente.
+La actividad se ha resuelto mediante un proyecto Java con JADE que no se limita a instalar la plataforma, sino que construye una demostración funcional de comunicación entre agentes. La solución implementa un cliente con interfaz gráfica Swing y un agente respondedor que procesa peticiones del usuario mediante mensajes ACL. De esta forma, la entrega muestra tanto la puesta en marcha del entorno como un caso práctico de interacción dentro de un sistema multiagente.
 
-La memoria presenta primero la instalación del entorno de ejecución y, a continuación, el diseño del ejercicio, la arquitectura de los agentes, el funcionamiento general y las pruebas realizadas. El objetivo es dejar un resultado claro, reproducible y fácil de revisar.
+El enfoque elegido busca que la práctica sea presentable como trabajo de informática: el repositorio contiene código fuente, configuración reproducible con Maven, pruebas automáticas y una memoria técnica que describe la arquitectura y el comportamiento del sistema. La parte más relevante desde el punto de vista de la asignatura es que los agentes tienen responsabilidades diferenciadas y cooperan mediante intercambio de mensajes, que es uno de los mecanismos centrales del modelo de JADE.
 
-\section{Instalación de JADE}
-\subsection{Opción recomendada hoy}
-La documentación oficial actual de JADE indica que la bifurcación \emph{Jade 4.5.3} puede integrarse directamente mediante Maven usando JitPack \cite{jade-download}. Esta opción es la que se ha documentado en el proyecto porque encaja mejor con una entrega reproducible en un repositorio moderno.
+\section{Entorno de trabajo e instalación}
+\subsection{Tecnologías empleadas}
+La solución se apoya en los siguientes elementos:
 
-El \texttt{pom.xml} del ejercicio añade la dependencia y el repositorio necesarios. La configuración empleada fuerza Java 8 como nivel de compilación para mantener compatibilidad con la versión pedida en la práctica.
+\begin{itemize}[leftmargin=*]
+  \item Java 8 como nivel de compilación compatible con JADE.
+  \item Maven como herramienta de construcción del proyecto.
+  \item JADE como plataforma para la gestión del contenedor principal, el ciclo de vida de los agentes y el intercambio de mensajes.
+  \item Swing para la interfaz gráfica del agente cliente.
+\end{itemize}
 
-\begin{lstlisting}[style=javaStyle, caption={Fragmento esencial del `pom.xml`.}]
+\subsection{Integración de JADE}
+La documentación oficial actual de JADE permite integrar la librería directamente desde Maven mediante JitPack \cite{jade-download}. Esta vía se ha elegido porque simplifica la preparación del entorno y deja el proyecto listo para compilar en cualquier equipo que disponga de Java y Maven.
+
+\begin{lstlisting}[style=javaStyle, caption={Configuración esencial del proyecto Maven para usar JADE.}]
 <repositories>
   <repository>
     <id>jitpack.io</id>
@@ -85,97 +86,169 @@ El \texttt{pom.xml} del ejercicio añade la dependencia y el repositorio necesar
 </dependency>
 \end{lstlisting}
 
-\subsection{Nota sobre el procedimiento clásico}
-El enunciado original de la actividad hace referencia al despliegue clásico de JADE mediante ficheros descargados. Esa vía sigue apareciendo en la documentación de arranque del runtime \cite{jade-start}, pero para esta entrega se ha preferido la integración por Maven porque reduce pasos manuales y deja una base más limpia para el proyecto Java.
+\subsection{Observación sobre el procedimiento clásico}
+El material de la actividad menciona el despliegue clásico mediante descargas manuales. Esa opción sigue siendo válida, pero en este trabajo se ha optado por la integración con Maven porque reduce errores de configuración, evita copiar librerías al proyecto y permite dejar un proceso de construcción más limpio. JADE continúa siendo una plataforma Java y los requisitos indicados por su documentación oficial son compatibles con la versión utilizada en esta práctica \cite{jade-start,jade-about}.
 
-\subsection{Verificación de requisitos}
-La página oficial del proyecto indica que JADE está implementado en Java y requiere una versión de JRE superior a 1.7 \cite{jade-about}. Por eso la solución puede documentarse y compilarse sin problema sobre Java 8, que es el nivel elegido para la actividad.
-
-\section{Desarrollo del ejercicio}
-\subsection{Estructura del proyecto}
-El repositorio se organiza en dos bloques:
+\section{Descripción general del proyecto}
+\subsection{Estructura del repositorio}
+El repositorio se divide en dos carpetas principales:
 
 \begin{itemize}[leftmargin=*]
-  \item \texttt{java/}, con el proyecto Maven y los agentes JADE;
-  \item \texttt{docs/}, con la memoria, la bibliografía y el \texttt{Makefile}.
+  \item \texttt{java/}: contiene el proyecto Maven, las clases de los agentes y las pruebas unitarias.
+  \item \texttt{docs/}: contiene la memoria, la bibliografía, las capturas y los ficheros auxiliares para generar el documento final.
 \end{itemize}
 
-La decisión de separar código y documentación facilita la evaluación y evita mezclar los ficheros fuente con los artefactos de compilación.
+Esta separación permite mantener aislado el código ejecutable de la documentación y facilita la revisión de la entrega.
 
-\subsection{Arquitectura de agentes}
-El ejercicio adicional se ha reducido a una interacción clara entre dos agentes:
+\subsection{Objetivo técnico del ejercicio adicional}
+El ejercicio desarrollado consiste en un chat mínimo entre agentes. El usuario interactúa con una ventana Swing asociada al agente cliente y escribe órdenes o mensajes libres. El agente cliente transforma esa entrada en mensajes ACL dirigidos al agente respondedor. El agente respondedor interpreta la petición y devuelve una respuesta informativa. Finalmente, el agente cliente recibe la respuesta y la muestra en la transcripción de la interfaz.
+
+Aunque se trata de una demostración pequeña, incluye varios elementos representativos de un sistema multiagente:
 
 \begin{itemize}[leftmargin=*]
-  \item \texttt{ChatClientAgent}, que abre una interfaz Swing para escribir mensajes;
-  \item \texttt{ChatResponderAgent}, que recibe mensajes, aplica una respuesta sencilla y la devuelve al cliente.
+  \item existencia de múltiples agentes con identidad propia;
+  \item comunicación asíncrona mediante mensajes ACL;
+  \item separación de responsabilidades entre agentes;
+  \item ejecución coordinada dentro de un contenedor principal de JADE.
 \end{itemize}
 
-El contenedor principal arranca ambos agentes y activa la consola administrativa de JADE para poder supervisar el estado del sistema desde el inicio.
-
-\capturapendiente{Captura del arranque del contenedor principal de JADE y de la ventana del cliente Swing.}
-
-\subsection{Cliente Swing}
-La clase \texttt{ChatWindow} encapsula la interfaz gráfica. Incluye:
+\section{Arquitectura multiagente}
+\subsection{Agentes implementados}
+La solución incluye dos agentes y un punto de arranque:
 
 \begin{itemize}[leftmargin=*]
-  \item área de transcripción para mensajes enviados y recibidos;
-  \item campo de texto de entrada;
-  \item botón de envío;
-  \item ayuda breve con los comandos soportados.
+  \item \texttt{Main}: crea el contenedor principal de JADE, configura el perfil de ejecución y arranca los agentes.
+  \item \texttt{ChatClientAgent}: agente cliente que gestiona la interacción con el usuario.
+  \item \texttt{ChatResponderAgent}: agente respondedor que procesa el contenido recibido y genera la contestación.
 \end{itemize}
 
-El cliente no envía mensajes directamente desde la interfaz gráfica. En su lugar, los encola y deja que el agente los procese en su propio ciclo de comportamiento, lo que evita mezclar la lógica de UI con la lógica de mensajería.
+\subsection{Tipo de agente cliente}
+El \texttt{ChatClientAgent} puede describirse como un agente de interfaz e intermediación. No realiza cálculos sobre el dominio ni toma decisiones complejas; su función principal es actuar como puente entre el usuario humano y la plataforma JADE. Este agente:
 
-\capturapendiente{Captura de la interfaz Swing con un mensaje escrito antes de enviarlo.}
+\begin{itemize}[leftmargin=*]
+  \item crea o coordina la ventana Swing cuando la aplicación se ejecuta en modo interactivo;
+  \item recoge la entrada textual del usuario;
+  \item encola los mensajes para no bloquear la interfaz;
+  \item envía solicitudes ACL al agente respondedor;
+  \item recibe las respuestas y las presenta en la transcripción del chat.
+\end{itemize}
 
-\subsection{Agente respondedor}
-El agente respondedor escucha mensajes ACL y genera respuestas simples. Si recibe el texto \texttt{hora} o \texttt{/hora}, devuelve la hora actual. Si recibe \texttt{ayuda} o \texttt{/ayuda}, muestra los comandos disponibles. En cualquier otro caso, contesta con un eco del mensaje.
+Desde un punto de vista conceptual, es un agente orientado a la interacción humano-sistema. Su comportamiento es cíclico, reactivo a la llegada de mensajes y además coordinador de eventos procedentes de la interfaz gráfica.
 
-\lstinputlisting[style=javaStyle, caption={Lógica principal del agente respondedor.}]{../java/src/main/java/com/unir/jade/chat/ChatResponderAgent.java}
+\subsection{Tipo de agente respondedor}
+El \texttt{ChatResponderAgent} puede clasificarse como un agente reactivo de servicio. No mantiene un modelo deliberativo complejo ni planifica a largo plazo; su papel es esperar mensajes, interpretar su contenido y producir una respuesta inmediata. En concreto:
 
-\subsection{Arranque de la aplicación}
-El punto de entrada crea el contenedor principal, arranca el agente respondedor y después el cliente Swing.
+\begin{itemize}[leftmargin=*]
+  \item permanece a la espera de mensajes ACL entrantes;
+  \item delega el procesamiento en \texttt{ResponderCommandProcessor};
+  \item envía una respuesta al emisor original mediante \texttt{createReply()};
+  \item registra por consola el mensaje recibido y la respuesta emitida.
+\end{itemize}
 
-\lstinputlisting[style=javaStyle, caption={Punto de entrada del demo.}]{../java/src/main/java/com/unir/jade/chat/Main.java}
+Se trata de un agente adecuado para una primera práctica porque permite mostrar percepción del entorno de mensajes y reacción ante eventos sin introducir una lógica demasiado extensa.
 
-\section{Funcionamiento}
-La ejecución se realiza con Maven:
+\subsection{Flujo de comunicación}
+La interacción principal del sistema sigue el siguiente recorrido:
 
-\begin{lstlisting}[style=javaStyle, caption={Comando de ejecución del ejercicio.}]
+\begin{enumerate}[leftmargin=*]
+  \item el usuario escribe un texto en la ventana Swing;
+  \item el \texttt{ChatClientAgent} lo encapsula en un mensaje ACL de tipo \texttt{REQUEST};
+  \item el \texttt{ChatResponderAgent} recibe la petición;
+  \item el respondedor analiza el contenido y construye una respuesta;
+  \item el respondedor devuelve un mensaje ACL de tipo \texttt{INFORM};
+  \item el cliente recibe la contestación y la representa en pantalla.
+\end{enumerate}
+
+Este patrón es útil académicamente porque muestra un intercambio completo solicitud-respuesta entre agentes locales dentro de un mismo contenedor JADE.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{captures/capture-01.png}
+\caption{Arranque del contenedor principal de JADE, consola administrativa y ventana del agente cliente.}
+\end{figure}
+
+\section{Comportamiento funcional del sistema}
+\subsection{Interfaz del agente cliente}
+La interfaz gráfica está implementada en la clase \texttt{ChatWindow}. La ventana incluye un área de transcripción, un campo de texto para introducir mensajes, un botón de envío y una línea de ayuda con los comandos disponibles. Esta interfaz no contiene lógica JADE directa; únicamente reenvía la entrada del usuario al agente cliente. Esta separación es una decisión correcta de diseño porque evita mezclar la presentación con la mensajería.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{captures/capture-02.png}
+\caption{Ventana del agente cliente con la orden \texttt{calc (6+8)/2} preparada para su envío.}
+\end{figure}
+
+\subsection{Comandos soportados por el agente respondedor}
+El comportamiento del respondedor ya no se reduce a un eco simple. La lógica de comandos se concentra en un procesador específico desacoplado de JADE, lo que facilita explicar y probar el comportamiento real del agente. Los comandos disponibles son los siguientes:
+
+\begin{itemize}[leftmargin=*]
+  \item \texttt{hora} o \texttt{/hora}: devuelve la hora actual del sistema.
+  \item \texttt{ayuda} o \texttt{/ayuda}: muestra la lista de comandos soportados.
+  \item \texttt{upper <texto>}: transforma el texto recibido a mayúsculas.
+  \item \texttt{count <texto>}: informa del número de palabras y caracteres.
+  \item \texttt{calc <expresion>}: evalúa una expresión aritmética simple con operadores básicos y paréntesis.
+  \item \texttt{history}: devuelve el historial reciente de mensajes procesados.
+\end{itemize}
+
+Si el texto no coincide con ninguno de los comandos anteriores, el agente responde con un eco del contenido recibido. Esto garantiza que siempre exista una contestación visible y facilita la comprobación manual del intercambio de mensajes.
+
+\subsection{Valor académico del comportamiento implementado}
+Aunque los comandos son sencillos, el ejercicio permite evidenciar varios conceptos relevantes:
+
+\begin{itemize}[leftmargin=*]
+  \item el agente respondedor no es una ventana estática, sino un componente autónomo que procesa solicitudes;
+  \item la lógica de respuesta está desacoplada de la infraestructura JADE y puede probarse mediante tests unitarios;
+  \item la conversación no depende de llamadas directas entre clases, sino de mensajería ACL;
+  \item el uso de un historial muestra que el agente mantiene un pequeño estado interno.
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{captures/capture-03.png}
+\caption{Resultado visible en la interfaz tras enviar la operación \texttt{calc (6+8)/2}.}
+\end{figure}
+
+\section{Puesta en marcha}
+La ejecución interactiva del proyecto se realiza desde la carpeta \texttt{java/}:
+
+\begin{lstlisting}[style=javaStyle, caption={Comando de ejecución del ejercicio en modo gráfico.}]
 cd java
 mvn exec:java -Dexec.mainClass=com.unir.jade.chat.Main
 \end{lstlisting}
 
-Al arrancar, se observa la consola administrativa de JADE y la ventana del cliente. La interacción básica prevista es:
+Además, el proyecto incluye un modo demostración activable con el argumento \texttt{--demo}. Este modo es útil para verificar el comportamiento en entornos sin interfaz gráfica, ya que envía automáticamente una secuencia predefinida de mensajes y cierra la plataforma al finalizar.
 
-\begin{enumerate}[leftmargin=*]
-  \item escribir un mensaje en la ventana Swing;
-  \item pulsar \emph{Enviar};
-  \item comprobar que el agente respondedor procesa el texto;
-  \item verificar la respuesta en la transcripción del cliente.
-\end{enumerate}
-
-\capturapendiente{Captura de la conversación entre cliente y agente respondedor con una respuesta visible.}
-
-\section{Pruebas}
-Para la parte Java se ha incluido una prueba sencilla de formato de transcripciones, suficiente para validar la utilidad auxiliar que da forma a las líneas del chat.
-
-\lstinputlisting[style=javaStyle, caption={Prueba unitaria de formato de transcripciones.}]{../java/src/test/java/com/unir/jade/chat/ChatTranscriptFormatterTest.java}
-
-La verificación completa prevista para la entrega es:
+\section{Pruebas y validación}
+\subsection{Pruebas automáticas}
+El proyecto incorpora pruebas unitarias sobre dos piezas que concentran lógica reutilizable:
 
 \begin{itemize}[leftmargin=*]
-  \item compilar con Maven;
-  \item ejecutar las pruebas;
-  \item lanzar el demo y comprobar la interacción entre agentes;
-  \item generar esta memoria sin errores.
+  \item \texttt{ChatTranscriptFormatterTest}, para verificar el formato de las líneas mostradas en la transcripción.
+  \item \texttt{ResponderCommandProcessorTest}, para comprobar eco, mayúsculas, conteo, cálculo, gestión de expresiones erróneas e historial.
 \end{itemize}
 
-\subsection{Salida de ejemplo}
-\lstinputlisting[basicstyle=\ttfamily\small, backgroundcolor=\color{codebg}, frame=single, caption={Salida de ejemplo del programa.}]{sample-output.txt}
+Este enfoque es importante porque la parte más fácil de verificar de forma automática no es la interfaz gráfica, sino la lógica de transformación y respuesta.
+
+\lstinputlisting[style=javaStyle, caption={Pruebas del procesador de comandos del agente respondedor.}]{../java/src/test/java/com/unir/jade/chat/ResponderCommandProcessorTest.java}
+
+\subsection{Evidencia de ejecución}
+La salida de consola del modo demostración confirma el ciclo completo de comunicación entre agentes: arranque de la plataforma, envío de mensajes del cliente, recepción por parte del respondedor y devolución de la respuesta.
+
+\lstinputlisting[basicstyle=\ttfamily\small, backgroundcolor=\color{codebg}, frame=single, breaklines=true, caption={Salida de ejemplo del modo demostración.}]{sample-output.txt}
+
+\subsection{Comprobaciones realizadas}
+La validación de la práctica se ha apoyado en cuatro comprobaciones:
+
+\begin{itemize}[leftmargin=*]
+  \item compilación correcta del proyecto Maven;
+  \item ejecución satisfactoria de las pruebas unitarias;
+  \item arranque del contenedor principal de JADE y de los dos agentes;
+  \item verificación manual de la interacción desde la interfaz Swing.
+\end{itemize}
 
 \section{Conclusiones}
-La solución cumple el objetivo principal de la práctica porque no se limita a una instalación aislada de JADE. El proyecto incluye una demostración con dos agentes, una interfaz gráfica real y una documentación reproducible.
+La práctica queda resuelta con una entrega más sólida que una simple instalación de JADE, ya que presenta un caso funcional de comunicación entre agentes con interfaz gráfica y lógica de respuesta propia. El sistema demuestra que JADE puede emplearse para construir aplicaciones donde varios agentes cooperan mediante mensajes y mantienen responsabilidades bien separadas.
+
+Desde la perspectiva de la asignatura, el agente cliente puede entenderse como un agente de interfaz e intermediación, mientras que el agente respondedor actúa como un agente reactivo de servicio. Esta distinción aporta valor al trabajo porque no solo enseña a arrancar la plataforma, sino también a diseñar roles diferentes dentro de una arquitectura multiagente sencilla pero coherente.
 
 \bibliographystyle{plain}
 \bibliography{bib/references}
