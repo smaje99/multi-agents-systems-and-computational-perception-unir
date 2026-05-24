@@ -1,0 +1,16 @@
+Agente respondedor listo: responder
+JADE arrancado en modo demostracion.
+[Sistema] Modo demostracion activo.
+[Sistema] Mensajes preparados: [hola, hora, /ayuda]
+[client -> responder] hola
+[client -> responder] hora
+[client -> responder] /ayuda
+Recibido de client: hola
+Respuesta enviada: Eco desde responder: hola
+[responder] Eco desde responder: hola
+Recibido de client: hora
+Respuesta enviada: Hora actual: 02:31:55
+[responder] Hora actual: 02:31:55
+Recibido de client: /ayuda
+Respuesta enviada: Prueba con texto libre, 'hora' o '/ayuda'.
+[responder] Prueba con texto libre, 'hora' o '/ayuda'.

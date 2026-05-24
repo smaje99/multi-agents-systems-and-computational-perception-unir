@@ -1,0 +1,187 @@
+\documentclass[12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage[sfdefault]{carlito}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{array}
+
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue}
+
+\newcommand{\Universidad}{Universidad Internacional de La Rioja (UNIR)}
+\newcommand{\Asignatura}{Sistemas Multiagente y Percepción Computacional}
+
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codecomment}{RGB}{0,102,51}
+\definecolor{codekeyword}{RGB}{0,51,153}
+\definecolor{codestring}{RGB}{153,0,0}
+
+\lstdefinestyle{javaStyle}{
+  language=Java,
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  commentstyle=\color{codecomment},
+  keywordstyle=\color{codekeyword}\bfseries,
+  stringstyle=\color{codestring},
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  breaklines=true,
+  frame=single,
+  tabsize=4,
+  showstringspaces=false
+}
+
+\newcommand{\capturapendiente}[1]{
+\begin{center}
+\fbox{\parbox{0.88\textwidth}{\centering #1}}
+\end{center}
+\noindent\textit{#1}\par\medskip
+}
+
+\title{\textbf{Actividad JADE con informe LaTeX y ejercicio adicional}}
+\author{Sergio Andrés Majé Franco}
+\date{\Asignatura \\ \Universidad \\ \today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Objetivo}
+El objetivo de esta práctica es preparar una actividad completa con JADE que no se limite a la instalación del framework, sino que incluya un caso de uso mínimo pero defendible: un agente con interfaz Swing que conversa con otro agente y permite demostrar envío y recepción de mensajes.
+
+Además, la solución debía dejar una memoria en \LaTeX{} lista para completar con capturas, de forma que el material final sea útil tanto para la revisión docente como para una defensa oral breve.
+
+\section{Instalación de JADE}
+\subsection{Opción recomendada hoy}
+La documentación oficial actual de JADE indica que la bifurcación \emph{Jade 4.5.3} puede integrarse directamente mediante Maven usando JitPack \cite{jade-download}. Esta opción es la que se ha documentado en el proyecto porque encaja mejor con una entrega reproducible en un repositorio moderno.
+
+El \texttt{pom.xml} del ejercicio añade la dependencia y el repositorio necesarios. La configuración empleada fuerza Java 8 como nivel de compilación para mantener compatibilidad con la versión pedida en la práctica.
+
+\begin{lstlisting}[style=javaStyle, caption={Fragmento esencial del `pom.xml`.}]
+<repositories>
+  <repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+  </repository>
+</repositories>
+
+<dependency>
+  <groupId>com.gitlab.jade-project</groupId>
+  <artifactId>jade</artifactId>
+  <version>master-SNAPSHOT</version>
+</dependency>
+\end{lstlisting}
+
+\subsection{Nota sobre el procedimiento clásico}
+El enunciado original de la actividad hace referencia al despliegue clásico de JADE mediante ficheros descargados. Esa vía sigue apareciendo en la documentación de arranque del runtime \cite{jade-start}, pero para esta entrega se ha preferido la integración por Maven porque reduce pasos manuales y deja una base más limpia para el proyecto Java.
+
+\subsection{Verificación de requisitos}
+La página oficial del proyecto indica que JADE está implementado en Java y requiere una versión de JRE superior a 1.7 \cite{jade-about}. Por eso la solución puede documentarse y compilarse sin problema sobre Java 8, que es el nivel elegido para la actividad.
+
+\section{Desarrollo del ejercicio}
+\subsection{Estructura del proyecto}
+El repositorio se organiza en dos bloques:
+
+\begin{itemize}[leftmargin=*]
+  \item \texttt{java/}, con el proyecto Maven y los agentes JADE;
+  \item \texttt{docs/}, con la memoria, la bibliografía y el \texttt{Makefile}.
+\end{itemize}
+
+La decisión de separar código y documentación facilita la evaluación y evita mezclar los ficheros fuente con los artefactos de compilación.
+
+\subsection{Arquitectura de agentes}
+El ejercicio adicional se ha reducido a una interacción clara entre dos agentes:
+
+\begin{itemize}[leftmargin=*]
+  \item \texttt{ChatClientAgent}, que abre una interfaz Swing para escribir mensajes;
+  \item \texttt{ChatResponderAgent}, que recibe mensajes, aplica una respuesta sencilla y la devuelve al cliente.
+\end{itemize}
+
+El contenedor principal arranca ambos agentes y activa la consola administrativa de JADE para poder supervisar el estado del sistema desde el inicio.
+
+\capturapendiente{Captura del arranque del contenedor principal de JADE y de la ventana del cliente Swing.}
+
+\subsection{Cliente Swing}
+La clase \texttt{ChatWindow} encapsula la interfaz gráfica. Incluye:
+
+\begin{itemize}[leftmargin=*]
+  \item área de transcripción para mensajes enviados y recibidos;
+  \item campo de texto de entrada;
+  \item botón de envío;
+  \item ayuda breve con los comandos soportados.
+\end{itemize}
+
+El cliente no envía mensajes directamente desde la interfaz gráfica. En su lugar, los encola y deja que el agente los procese en su propio ciclo de comportamiento, lo que evita mezclar la lógica de UI con la lógica de mensajería.
+
+\capturapendiente{Captura de la interfaz Swing con un mensaje escrito antes de enviarlo.}
+
+\subsection{Agente respondedor}
+El agente respondedor escucha mensajes ACL y genera respuestas simples. Si recibe el texto \texttt{hora} o \texttt{/hora}, devuelve la hora actual. Si recibe \texttt{ayuda} o \texttt{/ayuda}, muestra los comandos disponibles. En cualquier otro caso, contesta con un eco del mensaje.
+
+\lstinputlisting[style=javaStyle, caption={Lógica principal del agente respondedor.}]{../java/src/main/java/com/unir/jade/chat/ChatResponderAgent.java}
+
+\subsection{Arranque de la aplicación}
+El punto de entrada crea el contenedor principal, arranca el agente respondedor y después el cliente Swing.
+
+\lstinputlisting[style=javaStyle, caption={Punto de entrada del demo.}]{../java/src/main/java/com/unir/jade/chat/Main.java}
+
+\section{Funcionamiento}
+La ejecución se realiza con Maven:
+
+\begin{lstlisting}[style=javaStyle, caption={Comando de ejecución del ejercicio.}]
+cd java
+mvn exec:java -Dexec.mainClass=com.unir.jade.chat.Main
+\end{lstlisting}
+
+Al arrancar, se observa la consola administrativa de JADE y la ventana del cliente. La interacción básica prevista es:
+
+\begin{enumerate}[leftmargin=*]
+  \item escribir un mensaje en la ventana Swing;
+  \item pulsar \emph{Enviar};
+  \item comprobar que el agente respondedor procesa el texto;
+  \item verificar la respuesta en la transcripción del cliente.
+\end{enumerate}
+
+\capturapendiente{Captura de la conversación entre cliente y agente respondedor con una respuesta visible.}
+
+\section{Pruebas}
+Para la parte Java se ha incluido una prueba sencilla de formato de transcripciones, suficiente para validar la utilidad auxiliar que da forma a las líneas del chat.
+
+\lstinputlisting[style=javaStyle, caption={Prueba unitaria de formato de transcripciones.}]{../java/src/test/java/com/unir/jade/chat/ChatTranscriptFormatterTest.java}
+
+La verificación completa prevista para la entrega es:
+
+\begin{itemize}[leftmargin=*]
+  \item compilar con Maven;
+  \item ejecutar las pruebas;
+  \item lanzar el demo y comprobar la interacción entre agentes;
+  \item compilar esta memoria \LaTeX{} sin errores.
+\end{itemize}
+
+\subsection{Salida de ejemplo}
+\lstinputlisting[basicstyle=\ttfamily\small, backgroundcolor=\color{codebg}, frame=single, caption={Salida de ejemplo del programa.}]{sample-output.txt}
+
+\section{Conclusiones}
+La solución cumple el objetivo principal de la práctica porque no se limita a una instalación aislada de JADE. El proyecto incluye una demostración con dos agentes, una interfaz gráfica real y una documentación reproducible en \LaTeX{}.
+
+También se ha resuelto el punto más delicado de la actividad: documentar la instalación de forma actual sin traicionar el enunciado original. La vía Maven con JitPack simplifica el despliegue, mientras que la memoria deja constancia del procedimiento clásico de arranque del runtime como referencia histórica.
+
+En conjunto, el resultado es una base compacta, presentable y fácil de extender con las capturas finales.
+
+\bibliographystyle{plain}
+\bibliography{bib/references}
+
+\end{document}
