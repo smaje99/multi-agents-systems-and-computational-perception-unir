@@ -15,6 +15,26 @@ public final class Main {
     private Main() {
     }
 
+    /**
+     * Starts the JADE runtime, creates the main container, and launches the
+     * two agents used by the chat demo.
+     *
+     * <p>The application supports two execution modes:
+     * <ul>
+     *   <li>the default Swing mode, where the user interacts with a graphical
+     *   window; and</li>
+     *   <li>a deterministic demo mode activated with {@code --demo}, which
+     *   sends a predefined conversation automatically so the behavior can be
+     *   verified in environments without a GUI.</li>
+     * </ul>
+     *
+     * <p>The method also configures the local host and a fixed local port so
+     * the JADE platform starts predictably in restricted or sandboxed
+     * environments.
+     *
+     * @param args optional command-line arguments; {@code --demo} enables the
+     *             non-interactive execution mode
+     */
     public static void main(String[] args) {
         boolean demoMode = false;
         if (args != null) {
@@ -47,6 +67,15 @@ public final class Main {
         }
     }
 
+    /**
+     * Creates and starts a new JADE agent inside the provided container.
+     *
+     * @param container the container that will own the new agent
+     * @param name the local agent name to register in the platform
+     * @param className the fully qualified class name of the agent
+     * @param arguments optional agent arguments passed to {@code setup()}
+     * @throws IllegalStateException if JADE cannot create or start the agent
+     */
     private static void startAgent(ContainerController container, String name, String className, Object[] arguments) {
         try {
             AgentController controller = container.createNewAgent(name, className, arguments);

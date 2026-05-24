@@ -20,9 +20,26 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+/**
+ * Swing window used by the chat client agent.
+ *
+ * <p>The window contains a scrollable transcript, a text field for composing a
+ * message, and a send button. The class is intentionally kept free of JADE
+ * dependencies so it can focus exclusively on presentation concerns while the
+ * agent handles communication.
+ */
 public final class ChatWindow extends JFrame {
 
+    /**
+     * Callback interface used by the GUI to delegate message delivery to the
+     * owning agent.
+     */
     public interface MessageSender {
+        /**
+         * Sends the text currently typed by the user.
+         *
+         * @param text the message body to send
+         */
         void send(String text);
     }
 
@@ -30,6 +47,14 @@ public final class ChatWindow extends JFrame {
     private final JTextField inputField;
     private final MessageSender messageSender;
 
+    /**
+     * Creates the chat window and wires all GUI callbacks.
+     *
+     * @param clientName the logical name of the local chat client
+     * @param responderName the logical name of the responder agent
+     * @param messageSender callback used to hand user-entered text to the agent
+     * @param onClose callback executed when the user closes the window
+     */
     public ChatWindow(String clientName, String responderName, MessageSender messageSender, final Runnable onClose) {
         super("Chat JADE - " + clientName);
         this.messageSender = messageSender;
@@ -103,18 +128,41 @@ public final class ChatWindow extends JFrame {
         });
     }
 
+    /**
+     * Appends a system-level status line to the transcript.
+     *
+     * @param text the status message to display
+     */
     public void appendSystemMessage(String text) {
         appendLine("[Sistema] " + text);
     }
 
+    /**
+     * Appends a message that was sent by the local user.
+     *
+     * @param sender the sender label to show in the transcript
+     * @param text the message body
+     */
     public void appendOutgoingMessage(String sender, String text) {
         appendLine(ChatTranscriptFormatter.formatOutgoing(sender, text));
     }
 
+    /**
+     * Appends a message received from the responder agent.
+     *
+     * @param sender the sender label to show in the transcript
+     * @param text the message body
+     */
     public void appendIncomingMessage(String sender, String text) {
         appendLine(ChatTranscriptFormatter.formatIncoming(sender, text));
     }
 
+    /**
+     * Sends the content of the text field through the configured callback.
+     *
+     * <p>Whitespace-only input is ignored so the transcript remains meaningful
+     * and the agent does not receive empty payloads.
+     */
     private void sendCurrentText() {
         String text = inputField.getText();
         if (text != null) {
@@ -129,6 +177,11 @@ public final class ChatWindow extends JFrame {
         messageSender.send(text);
     }
 
+    /**
+     * Appends a single transcript line on the Event Dispatch Thread.
+     *
+     * @param text the line to append to the transcript area
+     */
     private void appendLine(final String text) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -140,4 +193,3 @@ public final class ChatWindow extends JFrame {
         });
     }
 }
-
