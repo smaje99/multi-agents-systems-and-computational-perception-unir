@@ -89,7 +89,7 @@ public final class ChatWindow extends JFrame {
         bottom.add(Box.createVerticalStrut(8));
 
         JPanel helpPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        JLabel help = new JLabel("Comandos: /ayuda, hora");
+        JLabel help = new JLabel("Comandos: /ayuda, hora, upper, count, calc, history");
         helpPanel.add(help);
         bottom.add(helpPanel);
 

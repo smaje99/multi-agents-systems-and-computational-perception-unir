@@ -17,7 +17,7 @@ import java.time.format.DateTimeFormatter;
  */
 public class ChatResponderAgent extends Agent {
 
-    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private ResponderCommandProcessor commandProcessor;
 
     /**
      * Registers the cyclic behavior that consumes incoming messages and sends
@@ -29,6 +29,7 @@ public class ChatResponderAgent extends Agent {
     @Override
     protected void setup() {
         System.out.println("Agente respondedor listo: " + getLocalName());
+        commandProcessor = new ResponderCommandProcessor(getLocalName());
 
         addBehaviour(new CyclicBehaviour() {
             @Override
@@ -40,7 +41,7 @@ public class ChatResponderAgent extends Agent {
                 }
 
                 String content = message.getContent() == null ? "" : message.getContent().trim();
-                String replyText = buildReply(content);
+                String replyText = commandProcessor.buildReply(content);
 
                 ACLMessage reply = message.createReply();
                 reply.setPerformative(ACLMessage.INFORM);
@@ -51,35 +52,5 @@ public class ChatResponderAgent extends Agent {
                 System.out.println("Respuesta enviada: " + replyText);
             }
         });
-    }
-
-    /**
-     * Builds the reply text for a received message.
-     *
-     * <p>The responder supports a few simple commands:
-     * <ul>
-     *   <li>an empty message produces a diagnostic response;</li>
-     *   <li>{@code hora} or {@code /hora} returns the current time; and</li>
-     *   <li>{@code ayuda} or {@code /ayuda} returns a short usage hint.</li>
-     * </ul>
-     * Any other message is echoed back to the sender.
-     *
-     * @param content the normalized message content
-     * @return the reply text that will be sent to the original sender
-     */
-    private String buildReply(String content) {
-        if (content.isEmpty()) {
-            return "No he recibido texto para responder.";
-        }
-
-        if ("hora".equalsIgnoreCase(content) || "/hora".equalsIgnoreCase(content)) {
-            return "Hora actual: " + LocalDateTime.now().format(TIME_FORMAT);
-        }
-
-        if ("ayuda".equalsIgnoreCase(content) || "/ayuda".equalsIgnoreCase(content)) {
-            return "Prueba con texto libre, 'hora' o '/ayuda'.";
-        }
-
-        return "Eco desde " + getLocalName() + ": " + content;
     }
 }
